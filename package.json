@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "./run-tests.sh",
-    "start": "node ."
+    "test": "NODE_NO_WARNINGS=1 tap test --no-cov --no-esm --timeout 30000",
+    "start": "node .",
+    "docs": "docsify serve docs"
   },
   "type": "module",
   "keywords": [],
@@ -22,6 +23,8 @@
     "node": "13.3.0"
   },
   "devDependencies": {
+    "docsify-cli": "^4.4.1",
+    "puppeteer": "^3.3.0",
     "tap": "^14.10.7"
   }
 }

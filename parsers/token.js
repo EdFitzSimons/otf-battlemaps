@@ -1,3 +1,6 @@
+import CoordParser from "./coord-parser.js";
+import Overlay from "../overlay.js";
+
 const flagLookups = new Map([
   ["g", "forestgreen"],
   ["r", "firebrick"],
@@ -26,9 +29,11 @@ export default class TokenParser {
     if (str.length < 2) return false;
 
     // a string matching a token definition eg. D3rp-asdsa
-    const reg = /^([A-Za-z][0-9][0-9]?)([grbypcdTSMLHG]?[grbypcdTSMLHG]?)(-([A-Za-z0-9_-\s]*))?$/;
+    const reg = /^([A-Za-z][A-Za-z]?[0-9][0-9]?)([grbypcdTSMLHG]?[grbypcdTSMLHG]?)(-([A-Za-z0-9_-\s]*))?$/;
     if (reg.test(trimmed)) {
       const matches = trimmed.match(reg);
+
+      let coords = CoordParser.parse(matches[1]);
 
       let color = 'black';
       let size = 'medium';
@@ -37,22 +42,13 @@ export default class TokenParser {
         if (sizes.includes(char)) size = flagLookups.get(char);
       }
 
-      const coords = matches[1] || "";
-      const code = (coords[0] || "").charCodeAt(0);
-      let x;
-      if (code > 64 && code < 91) {
-        x = code - 64;
-      } else {
-        x = code - 70;
-      }
-
-      return {
-        x,
-        y: parseInt(coords.substr(1) || "", 10),
+      return new Overlay({
+        cell: matches[1],
         color,
         size,
-        name: matches[4] || "",
-      };
+        type: 'token',
+        label: matches[4] || "",
+      });
     }
 
     return false;

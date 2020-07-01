@@ -1,3 +1,4 @@
+import Line from "./line.js";
 import canvas from "canvas";
 const { Image } = canvas;
 
@@ -32,6 +33,7 @@ export default class Board {
     this.background = null;
     this.zoom = zoom;
     this.lines = [];
+    this.effects = [];
     this.darkMode = darkMode;
     this.gridOpacity = gridOpacity;
 
@@ -54,6 +56,10 @@ export default class Board {
 
   addLines(lines) {
     this.lines = lines;
+  }
+
+  addEffects(effects) {
+    this.effects = effects;
   }
 
   get(x, y) {
@@ -105,7 +111,11 @@ export default class Board {
       if (num < 1) continue;
 
       this.ctx.beginPath();
-      const character = num > 26 ? String.fromCharCode(num + 70) : String.fromCharCode(num + 64)
+      let character = String.fromCharCode(num + 64);
+      if (num > 26) {
+        const char = String.fromCharCode(num + 38);
+        character = `${char}${char}`;
+      }
 
       this.ctx.fillText(
         character,
@@ -177,66 +187,41 @@ export default class Board {
 
     this.drawGridAndCoords();
 
-    this.drawLines(this.ctx, this.lines);
+    // move ctx to account for padding
+    this.ctx.translate(this.padding, this.padding);
+
+    for (const line of this.lines) {
+      let l = new Line(line, this.darkMode ? textDarkMode : textLightMode, this.darkMode ? fillDarkMode : fillLightMode);
+      l.draw(this.ctx, this.gridsize, this.zoom);
+    }
 
     /* Keep the light text for tokens */
     this.ctx.font = tokenFont;
     this.ctx.fillStyle = textDarkMode;
     for (const { x, y, item } of this) {
       if (item) {
-        item.draw(this.ctx, x, y, this.gridsize, this.padding);
+        if (item.type === 'token') {
+          // const img = new Image();
+          // img.onload = () => {
+          //   this.ctx.drawImage(
+          //     img, 
+          //     (x - 1) * this.gridsize + this.padding,
+          //     (y - 1) * this.gridsize + this.padding,
+          //   );
+          // };
+          // img.onerror = (err) => {
+          //   throw err;
+          // };
+          // img.src = item.svg(this.gridsize, this.zoom);
+        } else {
+          item.draw(this.ctx, x, y, this.gridsize, this.zoom);
+        }
       }
     }
   }
 
-  drawLines(ctx, lines) {
-    let icons = [];
-
-    for (const line of lines) {
-      ctx.beginPath();
-      let startPt = line.shift()
-      ctx.moveTo(startPt.x * this.gridsize + this.padding, startPt.y * this.gridsize + this.padding);
-
-      while (line.length) {
-        let pt = line.shift();
-        ctx.lineTo(pt.x * this.gridsize + this.padding, pt.y * this.gridsize + this.padding);
-        if (pt.icon !== "") {
-          icons.push({ 
-            angle: Math.atan2(startPt.y - pt.y, startPt.x - pt.x),
-            x: (startPt.x + pt.x) / 2,
-            y: (startPt.y + pt.y) / 2,
-            type: pt.icon
-          });
-        }
-        startPt = pt;
-      }
-
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = this.darkMode ? textDarkMode : textLightMode;
-      ctx.stroke();
-    }
-
-    let unit = this.gridsize / 5;
-
-    for (const icon of icons) {
-      ctx.save();
-      ctx.beginPath();   
-      ctx.translate(icon.x * this.gridsize + this.padding, icon.y * this.gridsize + this.padding);
-      ctx.rotate(icon.angle);
-      if (icon.type === "double-door") {
-        ctx.rect(unit * -2, unit * -0.5, unit * 2, unit);
-        ctx.rect(0, unit * -0.5, unit * 2, unit);
-      } else { 
-        // normal door
-        ctx.rect(unit * -1.5, unit * -0.5, unit * 3, unit);
-      }
-
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = this.darkMode ? textDarkMode : textLightMode;
-      ctx.fillStyle = this.darkMode ? fillDarkMode : fillLightMode;
-      ctx.fill();   
-      ctx.stroke();
-      ctx.restore();
-    }
+  drawEffects() {
+    for(let effect of this.effects)
+      effect.draw(this.ctx, this.gridsize);
   }
 }

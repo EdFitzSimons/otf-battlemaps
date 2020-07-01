@@ -6,13 +6,17 @@ export default class Icon {
     this.icon = icon;
   }
 
+  get type() {
+    return 'icon';
+  }
+
   draw(ctx, x, y, gridsize) {
     const img = new Image();
     img.onload = () => {
       ctx.drawImage(
         img,
-        (x - 1) * gridsize + 15,
-        (y - 1) * gridsize + 15,
+        (x - 1) * gridsize,
+        (y - 1) * gridsize,
         gridsize,
         gridsize,
       );

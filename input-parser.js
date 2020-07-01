@@ -1,13 +1,14 @@
 import BoardParser from './parsers/board.js';
 import TokenParser from './parsers/token.js';
 import IconParser from './parsers/icon.js';
+import OverlayParser from './parsers/overlay.js';
 import ZoomParser from "./parsers/zoom.js";
 import BackgroundParser from "./parsers/background.js";
 import LineParser from "./parsers/line.js";
 import DarkModeParser from "./parsers/dark-mode.js"; 
 import GridOpacityParser from "./parsers/grid-opacity.js"; 
-import Token from "./token.js";
 import Icon from "./icon.js";
+import EffectParser from './parsers/effect-parser.js';
 
 export default class InputParser {
   constructor(pathname = "") {
@@ -15,7 +16,9 @@ export default class InputParser {
     this.board = { width: 10, height: 10 };
     this.lines = [];
     this.tokens = [];
+    this.effects = [];
     this.icons = [];
+    this.overlays = [];
     this.options = [];
     this.zoom = 1;
     this.darkMode = false;
@@ -30,11 +33,13 @@ export default class InputParser {
     const boardParser = new BoardParser();
     const tokenParser = new TokenParser();
     const iconParser = new IconParser();
+    const overlayParser = new OverlayParser();
     const zoomParser = new ZoomParser();
     const backgroundParser = new BackgroundParser();
     const lineParser = new LineParser();
     const darkModeParser = new DarkModeParser();
     const gridOpacityParser = new GridOpacityParser();
+    const effectParser = new EffectParser();
 
     for (const part of parts) {
       let parsed = boardParser.parse(part);
@@ -45,7 +50,13 @@ export default class InputParser {
 
       parsed = tokenParser.parse(part);
       if (parsed) {
-        this.tokens.push({ x: parsed.x, y: parsed.y, item: new Token(parsed) });
+        this.tokens.push(parsed);
+        continue;
+      }
+
+      parsed = overlayParser.parse(part);
+      if (parsed) {
+        this.overlays.push(parsed);
         continue;
       }
 
@@ -64,6 +75,12 @@ export default class InputParser {
       parsed = lineParser.parse(part);
       if (parsed) {
         this.lines = this.lines.concat(parsed);
+        continue;
+      }
+
+      parsed = effectParser.parse(part);
+      if (parsed) {
+        this.effects.push(parsed);
         continue;
       }
 
